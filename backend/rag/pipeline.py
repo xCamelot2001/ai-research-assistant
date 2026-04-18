@@ -6,7 +6,7 @@ import torch
 # load models
 embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 
-chroma_client = chromadb.PersistentClient(path="db")
+chroma_client = chromadb.PersistentClient(path="rag/db")
 collection = chroma_client.get_collection(name="research_papers")
 
 model_name = "Qwen/Qwen2.5-1.5B-Instruct"

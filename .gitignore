@@ -1,2 +1,50 @@
+# -------------------------
+# 🐍 Python / Backend
+# -------------------------
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Environment variables
 .env
-venv
+
+# Chroma / vector DB
+db/
+*.chroma/
+*.parquet
+
+# Model caches (VERY important - huge files)
+.cache/
+huggingface/
+*.bin
+*.safetensors
+
+# -------------------------
+# ⚛️ Next.js / Frontend
+# -------------------------
+node_modules/
+.next/
+out/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# -------------------------
+# 🧠 OS / Editor junk
+# -------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# -------------------------
+# 📝 Misc
+# -------------------------
+*.log

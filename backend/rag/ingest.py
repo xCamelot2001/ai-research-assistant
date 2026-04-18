@@ -18,8 +18,11 @@ model_llm = AutoModelForCausalLM.from_pretrained(
 # create a chroma client + database
 chroma_client = chromadb.PersistentClient(path="db")
 
-collection = chroma_client.create_collection(name="research_papers")
-
+try:
+    collection = chroma_client.get_collection(name="research_papers")
+except:
+    collection = chroma_client.create_collection(name="research_papers")
+    
 # Load model
 model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 
