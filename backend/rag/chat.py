@@ -42,7 +42,7 @@ while True:
     )
 
     retrieved_chunks = results["documents"][0]
-    context = "\n\n".join(retrieved_chunks[:2])
+    context = "\n\n".join(retrieved_chunks[:3])
 
     # build memory
     history_text = ""
