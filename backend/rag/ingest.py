@@ -2,6 +2,18 @@ import pymupdf
 import tiktoken
 from sentence_transformers import SentenceTransformer
 import chromadb
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+
+# Load LLM
+model_name = "Qwen/Qwen2.5-1.5B-Instruct"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model_llm = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    dtype=torch.float32,
+    device_map="auto"
+)
 
 # create a chroma client
 chroma_client = chromadb.Client()
@@ -54,4 +66,35 @@ query = "What are transformers in machine learning?"
 query_embedding = model.encode("Represent this sentence for retreival: " + query)
 
 results = collection.query(query_embeddings=[query_embedding], n_results=3)
-print(results["documents"])
+
+retrieved_chunks = results["documents"][0]
+
+context = "\n\n".join(retrieved_chunks[:2])
+
+prompt = f"""
+You are a helpful AI research assistant.
+
+Answer the question using ONLY the context below.
+If the answer is not in the context, say "I don't know".
+
+Context:
+{context}
+
+Question:
+{query}
+
+Answer:
+"""
+
+inputs = tokenizer(prompt, return_tensors="pt").to(model_llm.device)
+
+outputs = model_llm.generate(
+    **inputs,
+    max_new_tokens=200,
+    temperature=0.7,
+    do_sample=True
+)
+
+answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+print(answer)
