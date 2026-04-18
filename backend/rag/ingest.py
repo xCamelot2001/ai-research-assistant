@@ -15,8 +15,8 @@ model_llm = AutoModelForCausalLM.from_pretrained(
     device_map="auto"
 )
 
-# create a chroma client
-chroma_client = chromadb.Client()
+# create a chroma client + database
+chroma_client = chromadb.PersistentClient(path="db")
 
 collection = chroma_client.create_collection(name="research_papers")
 
@@ -56,45 +56,7 @@ embeddings = model.encode(
     ["Represent this sentence for retrieval: " + chunk for chunk in chunks]
 )
 
+# storing in database
 collection.add(
     embeddings=embeddings, documents=chunks, ids=[str(i) for i in range(len(chunks))]
 )
-
-# Check
-query = "What are transformers in machine learning?"
-
-query_embedding = model.encode("Represent this sentence for retreival: " + query)
-
-results = collection.query(query_embeddings=[query_embedding], n_results=3)
-
-retrieved_chunks = results["documents"][0]
-
-context = "\n\n".join(retrieved_chunks[:2])
-
-prompt = f"""
-You are a helpful AI research assistant.
-
-Answer the question using ONLY the context below.
-If the answer is not in the context, say "I don't know".
-
-Context:
-{context}
-
-Question:
-{query}
-
-Answer:
-"""
-
-inputs = tokenizer(prompt, return_tensors="pt").to(model_llm.device)
-
-outputs = model_llm.generate(
-    **inputs,
-    max_new_tokens=200,
-    temperature=0.7,
-    do_sample=True
-)
-
-answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-print(answer)
