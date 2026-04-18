@@ -16,7 +16,7 @@ model_llm = AutoModelForCausalLM.from_pretrained(
 )
 
 # create a chroma client + database
-chroma_client = chromadb.PersistentClient(path="db")
+chroma_client = chromadb.PersistentClient(path="rag/db")
 
 try:
     collection = chroma_client.get_collection(name="research_papers")

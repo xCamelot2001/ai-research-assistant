@@ -15,6 +15,22 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [file, setFile] = useState<File | null>(null);
+
+  const uploadPDF = async () => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await fetch("http://localhost:8000/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    alert("PDF uploaded!");
+  };
+
   // ✅ fix ref typing
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -135,6 +151,15 @@ export default function Home() {
               if (e.key === "Enter") sendMessage();
             }}
           />
+
+          <div style={{ marginBottom: 20 }}>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+            <button onClick={uploadPDF}>Upload PDF</button>
+          </div>
 
           <button
             onClick={sendMessage}
