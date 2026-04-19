@@ -49,8 +49,8 @@ def ingest_pdf(file_path):
     tokens = encoding.encode(text)
 
     chunks = []
-    chunk_size = 200
-    overlap = 50
+    chunk_size = 500
+    overlap = 100
     start = 0
 
     while start < len(tokens):
@@ -88,11 +88,11 @@ def run_rag(query):
 
     results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=3
+        n_results=5
     )
 
     retrieved_chunks = results["documents"][0]
-    context = "\n\n".join(retrieved_chunks[:2])
+    context = "\n\n".join(retrieved_chunks)
 
     print("QUERY:", query)
     print("RETRIEVED:", retrieved_chunks)

@@ -162,30 +162,54 @@ export default function ChatbotPage() {
     }
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const text = input.trim();
     if (!text) return;
+
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
       content: text,
     };
+
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
 
-    // Replace this timeout with your actual API call
     setIsTyping(true);
-    setTimeout(() => {
+
+    try {
+      const res = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: text }),
+      });
+
+      const data = await res.json();
+
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "bot",
-        content:
-          "Thanks for your message! This is a placeholder response — wire up your API here.",
+        content: data.answer,
       };
+
       setMessages((prev) => [...prev, botMsg]);
-      setIsTyping(false);
-    }, 1500);
+    } catch (err) {
+      console.error("CHAT ERROR:", err);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "bot",
+          content: "Something went wrong ❌",
+        },
+      ]);
+    }
+
+    setIsTyping(false);
   };
 
   const handleNewChat = () => {
@@ -201,17 +225,54 @@ export default function ChatbotPage() {
 
   const handleFileClick = () => fileInputRef.current?.click();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    console.log("Uploading:", file);
+
+    // show in chat
     setMessages((prev) => [
       ...prev,
       {
         id: Date.now().toString(),
         role: "user",
-        content: `📎 Uploaded: ${file.name}`,
+        content: `📎 Uploading: ${file.name}`,
       },
     ]);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://localhost:8000/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "bot",
+          content: `✅ Uploaded and processed: ${file.name}`,
+        },
+      ]);
+    } catch (err) {
+      console.error("UPLOAD ERROR:", err);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "bot",
+          content: `❌ Upload failed`,
+        },
+      ]);
+    }
+
     e.target.value = "";
   };
 
@@ -233,9 +294,9 @@ export default function ChatbotPage() {
       {/* Grainient background — full viewport */}
       <div style={{ width: "100%", height: "100vh", position: "relative" }}>
         <Grainient
-          color1="#362d35"
-          color2="#746d8c"
-          color3="#B497CF"
+          color1="#2a2530"
+          color2="#4a4358"
+          color3="#8a7fa0"
           timeSpeed={0.1}
           colorBalance={-0.07}
           warpStrength={2}
