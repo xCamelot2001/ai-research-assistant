@@ -15,7 +15,7 @@ model_name = "Qwen/Qwen2.5-1.5B-Instruct"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model_llm = AutoModelForCausalLM.from_pretrained(
     model_name,
-    torch_dtype=torch.float32,
+    dtype=torch.float32,
     device_map="auto"
 )
 

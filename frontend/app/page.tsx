@@ -1,49 +1,52 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import DarkVeil from "../components/DarkVeil";
-
-// ✅ define message type
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-};
+import { useState } from "react";
 
 export default function Home() {
-  // ✅ fix typing
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const [file, setFile] = useState<File | null>(null);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<
+    { role: "user" | "assistant"; content: string }[]
+  >([]);
 
+  // 🔥 UPLOAD FUNCTION
   const uploadPDF = async () => {
-    if (!file) return;
+    console.log("UPLOAD BUTTON CLICKED");
+
+    if (!file) {
+      alert("No file selected");
+      return;
+    }
+
+    console.log("Uploading file:", file);
 
     const formData = new FormData();
     formData.append("file", file);
 
-    await fetch("http://localhost:8000/upload", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const res = await fetch("http://localhost:8000/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-    alert("PDF uploaded!");
+      console.log("STATUS:", res.status);
+
+      const data = await res.json();
+      console.log("RESPONSE:", data);
+
+      alert("Upload successful");
+    } catch (err) {
+      console.error("UPLOAD ERROR:", err);
+      alert("Upload failed");
+    }
   };
 
-  // ✅ fix ref typing
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-
+  // 🔥 CHAT FUNCTION
   const sendMessage = async () => {
     if (!input) return;
 
-    const newMessages: Message[] = [
-      ...messages,
-      { role: "user", content: input },
-    ];
-
+    const newMessages = [...messages, { role: "user", content: input }];
     setMessages(newMessages);
-    setLoading(true);
 
     try {
       const res = await fetch("http://localhost:8000/chat", {
@@ -65,116 +68,44 @@ export default function Home() {
     }
 
     setInput("");
-    setLoading(false);
   };
 
-  // ✅ auto scroll
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   return (
-    <>
-      {/* ✅ BACKGROUND FIX */}
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          zIndex: -1,
-        }}
-      >
-        <DarkVeil />
+    <div style={{ padding: 20 }}>
+      <h1>AI Research Assistant</h1>
+
+      {/* 🔥 UPLOAD SECTION */}
+      <div style={{ marginBottom: 20 }}>
+        <input
+          type="file"
+          accept="application/pdf"
+          onChange={(e) => {
+            const selected = e.target.files?.[0] || null;
+            console.log("SELECTED FILE:", selected);
+            setFile(selected);
+          }}
+        />
+        <button onClick={uploadPDF}>Upload PDF</button>
       </div>
 
-      {/* ✅ MAIN UI */}
-      <div
-        style={{
-          maxWidth: 700,
-          margin: "auto",
-          padding: 20,
-          marginTop: 40,
-          background: "rgba(0,0,0,0.4)",
-          backdropFilter: "blur(10px)",
-          borderRadius: 20,
-          color: "white",
-        }}
-      >
-        <h1 style={{ textAlign: "center" }}>AI Research Assistant</h1>
-
-        <div style={{ minHeight: "70vh", marginBottom: 20 }}>
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
-                marginBottom: 10,
-              }}
-            >
-              <div
-                style={{
-                  background:
-                    msg.role === "user" ? "#0070f3" : "rgba(255,255,255,0.1)",
-                  color: "white",
-                  padding: "10px 15px",
-                  borderRadius: 15,
-                  maxWidth: "70%",
-                }}
-              >
-                {msg.content}
-              </div>
-            </div>
-          ))}
-
-          {loading && <p>Thinking...</p>}
-
-          <div ref={bottomRef} />
-        </div>
-
-        <div style={{ display: "flex", gap: 10 }}>
-          <input
-            style={{
-              flex: 1,
-              padding: 12,
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.2)",
-              background: "transparent",
-              color: "white",
-            }}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask something..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") sendMessage();
-            }}
-          />
-
-          <div style={{ marginBottom: 20 }}>
-            <input
-              type="file"
-              accept="application/pdf"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
-            <button onClick={uploadPDF}>Upload PDF</button>
+      {/* 🔥 CHAT SECTION */}
+      <div style={{ marginBottom: 20 }}>
+        {messages.map((msg, i) => (
+          <div key={i}>
+            <b>{msg.role}:</b> {msg.content}
           </div>
-
-          <button
-            onClick={sendMessage}
-            style={{
-              padding: "10px 20px",
-              borderRadius: 10,
-              background: "black",
-              color: "white",
-              border: "1px solid white",
-            }}
-          >
-            Send
-          </button>
-        </div>
+        ))}
       </div>
-    </>
+
+      {/* 🔥 INPUT */}
+      <div>
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask a question..."
+        />
+        <button onClick={sendMessage}>Send</button>
+      </div>
+    </div>
   );
 }
