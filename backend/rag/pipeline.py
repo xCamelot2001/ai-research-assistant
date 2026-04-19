@@ -22,6 +22,21 @@ model_llm = AutoModelForCausalLM.from_pretrained(
 def ingest_pdf(file_path):
     print("Processing PDF:", file_path)
 
+    # CLEAR OLD DATA
+    existing = collection.get()
+    ids = existing.get("ids", [])
+
+    print("Existing IDs:", len(ids))
+
+    if ids:
+        collection.delete(ids=ids)
+        print("Cleared old collection")
+    else:
+        print("No existing data to delete")
+    
+    print("Existing IDs:", ids[:5])
+    print("Total IDs:", len(ids))   
+
     # load pdf
     doc = pymupdf.open(file_path)
 
@@ -29,7 +44,7 @@ def ingest_pdf(file_path):
     for page in doc:
         text += page.get_text()
 
-    # chunk
+    # chunking
     encoding = tiktoken.get_encoding("cl100k_base")
     tokens = encoding.encode(text)
 
@@ -46,7 +61,12 @@ def ingest_pdf(file_path):
 
     print("Chunks created:", len(chunks))
 
-    # embed
+    # SAFETY CHECK
+    if len(chunks) == 0:
+        print("No text found in PDF")
+        return
+
+    # embeddings
     embeddings = embedding_model.encode(
         ["Represent this sentence for retrieval: " + c for c in chunks]
     )
@@ -58,8 +78,7 @@ def ingest_pdf(file_path):
         ids=[f"{file_path}_{i}" for i in range(len(chunks))]
     )
 
-    print("Stored in DB ✅")
-
+    print("Stored in DB")
     
 def run_rag(query):
 
