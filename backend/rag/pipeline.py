@@ -27,8 +27,7 @@ def call_llm(prompt):
             "Content-Type": "application/json",
         },
         json={
-            "model": "meta-llama/llama-3.3-70b-instruct:free",
-            # OR: "openrouter/free"
+            "model": "openrouter/free",
             "messages": [
                 {"role": "user", "content": prompt}
             ],
