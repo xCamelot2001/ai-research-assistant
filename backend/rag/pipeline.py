@@ -1,24 +1,48 @@
 import chromadb
 from sentence_transformers import SentenceTransformer
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
 import pymupdf
 import tiktoken
+import requests
+import os
+from dotenv import load_dotenv
 
-# load models
+load_dotenv()
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+# LOAD EMBEDDING MODEL
 embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 
+# CHROMA DB
 chroma_client = chromadb.PersistentClient(path="rag/db")
 collection = chroma_client.get_or_create_collection(name="research_papers")
 
-model_name = "Qwen/Qwen2.5-1.5B-Instruct"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model_llm = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    dtype=torch.float32,
-    device_map="auto"
-)
 
+# LLM CALL
+def call_llm(prompt):
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": "meta-llama/llama-3.3-70b-instruct:free",
+            # OR: "openrouter/free"
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 500
+        }
+    )
+
+    data = response.json()
+
+    return data["choices"][0]["message"]["content"]
+
+
+# INGEST
 def ingest_pdf(file_path):
     print("Processing PDF:", file_path)
 
@@ -26,25 +50,20 @@ def ingest_pdf(file_path):
     existing = collection.get()
     ids = existing.get("ids", [])
 
-    print("Existing IDs:", len(ids))
-
     if ids:
         collection.delete(ids=ids)
         print("Cleared old collection")
-    else:
-        print("No existing data to delete")
-    
-    print("Existing IDs:", ids[:5])
-    print("Total IDs:", len(ids))   
 
-    # load pdf
+    # LOAD PDF
     doc = pymupdf.open(file_path)
 
     text = ""
     for page in doc:
         text += page.get_text()
 
-    # chunking
+    print("TEXT LENGTH:", len(text))
+
+    # CHUNKING
     encoding = tiktoken.get_encoding("cl100k_base")
     tokens = encoding.encode(text)
 
@@ -61,17 +80,16 @@ def ingest_pdf(file_path):
 
     print("Chunks created:", len(chunks))
 
-    # SAFETY CHECK
     if len(chunks) == 0:
         print("No text found in PDF")
         return
 
-    # embeddings
+    # EMBEDDINGS
     embeddings = embedding_model.encode(
         ["Represent this sentence for retrieval: " + c for c in chunks]
     )
 
-    # store
+    # STORE
     collection.add(
         embeddings=embeddings,
         documents=chunks,
@@ -79,7 +97,9 @@ def ingest_pdf(file_path):
     )
 
     print("Stored in DB")
-    
+
+
+# RAG
 def run_rag(query):
 
     query_embedding = embedding_model.encode(
@@ -92,20 +112,21 @@ def run_rag(query):
     )
 
     retrieved_chunks = results["documents"][0]
+
+    if not retrieved_chunks:
+        return "No relevant information found."
+
     context = "\n\n".join(retrieved_chunks)
 
     print("QUERY:", query)
     print("RETRIEVED:", retrieved_chunks)
-    
+
     prompt = f"""
     You are a strict AI research assistant.
 
     You MUST answer ONLY using the provided context.
     If the answer is not explicitly in the context, say:
     "I don't know based on the provided document."
-
-    Do NOT use prior knowledge.
-    Do NOT make assumptions.
 
     Context:
     {context}
@@ -116,16 +137,7 @@ def run_rag(query):
     Answer:
     """
 
-    inputs = tokenizer(prompt, return_tensors="pt").to(model_llm.device)
-
-    outputs = model_llm.generate(
-        **inputs,
-        max_new_tokens=200,
-        temperature=0.7,
-        do_sample=True
-    )
-
-    answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    answer = answer.split("Answer:")[-1].strip()
+    # USE API
+    answer = call_llm(prompt)
 
     return answer
