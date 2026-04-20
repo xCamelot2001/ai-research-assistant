@@ -30,7 +30,7 @@ const INITIAL_MESSAGES: Message[] = [
     id: "1",
     role: "bot",
     content:
-      "Hello! How can I help you today? Feel free to ask me anything or upload a file to get started.",
+      "Hello! How can I help you today? Feel free to ask me anything - upload a file to get started.",
   },
 ];
 
@@ -506,7 +506,7 @@ export default function ChatbotPage() {
                 >
                   <Avatar
                     role={msg.role}
-                    initials={msg.role === "bot" ? "AI" : "JD"}
+                    initials={msg.role === "bot" ? "AI" : "HM"}
                   />
                   <div
                     style={{
