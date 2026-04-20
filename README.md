@@ -104,7 +104,7 @@ pip install -r requirements.txt
 Create `.env` file:
 
 ```env
-OPENROUTER_API_KEY=your_api_key_here
+OPENROUTER_API_KEY=your_api_key
 ```
 
 Run backend:
@@ -143,7 +143,7 @@ npm run dev
 
 ## 📸 Demo
 
-_Add screenshots or a demo video here_
+![AI Research Assistant UI](backend/assests/demo.png)
 
 ---
 
@@ -152,29 +152,14 @@ _Add screenshots or a demo video here_
 - User authentication
 - Multi-document support
 - Streaming responses
-- Cloud vector database (Pinecone / Supabase)
+- Cloud vector database
 - Deployment optimizations
 
 ---
 
 ## 👨‍💻 Author
 
-- GitHub: https://github.com/your-username
-- LinkedIn: (add your link)
+- GitHub: https://github.com/xCamelot2001
+- LinkedIn: https://www.linkedin.com/in/hosseinkhanehmasjedi
 
 ---
-
-## ⭐ Why This Project Matters
-
-This project demonstrates:
-
-- End-to-end AI system design
-- Retrieval-Augmented Generation (RAG)
-- Full-stack engineering (frontend + backend)
-- Real-world LLM integration
-
----
-
-## 📜 License
-
-MIT License
