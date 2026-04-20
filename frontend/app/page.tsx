@@ -297,7 +297,7 @@ export default function ChatbotPage() {
           color1="#2a2530"
           color2="#4a4358"
           color3="#8a7fa0"
-          timeSpeed={0.1}
+          timeSpeed={0.2}
           colorBalance={-0.07}
           warpStrength={2}
           warpFrequency={7}
