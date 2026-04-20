@@ -179,13 +179,16 @@ export default function ChatbotPage() {
     setIsTyping(true);
 
     try {
-      const res = await fetch("http://localhost:8000/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetch(
+        "https://ai-research-assistant-g3t1.onrender.com",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ question: text }),
         },
-        body: JSON.stringify({ question: text }),
-      });
+      );
 
       const data = await res.json();
 
@@ -245,10 +248,13 @@ export default function ChatbotPage() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://localhost:8000/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        "https://ai-research-assistant-g3t1.onrender.com/upload",
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
 
       if (!res.ok) throw new Error("Upload failed");
 
