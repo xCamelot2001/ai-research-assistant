@@ -145,6 +145,8 @@ npm run dev
 
 ![AI Research Assistant UI](backend/assests/demo.png)
 
+https://github.com/user-attachments/assets/3f714bc0-3173-4ba1-8754-d6bc48ee7d6b
+
 ---
 
 ## 💡 Future Improvements
