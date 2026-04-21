@@ -38,7 +38,15 @@ def call_llm(prompt):
 
     data = response.json()
 
-    return data["choices"][0]["message"]["content"]
+        # guard against empty or malformed responses
+    try:
+        content = data["choices"][0]["message"]["content"]
+        if not content or not content.strip():
+            return "Sorry, I couldn't generate a response. Please try again."
+        return content
+    except (KeyError, IndexError):
+        print("LLM ERROR:", data)  # error log
+        return "Sorry, I couldn't generate a response. Please try again."
 
 
 # INGEST
@@ -121,11 +129,11 @@ def run_rag(query):
     print("RETRIEVED:", retrieved_chunks)
 
     prompt = f"""
-    You are a strict AI research assistant.
+    You are a helpful assistant answering questions about a document.
 
-    You MUST answer ONLY using the provided context.
-    If the answer is not explicitly in the context, say:
-    "I don't know based on the provided document."
+    Answer the question using the context below. Be flexible with phrasing —
+    if the answer is clearly present in the context even if worded differently, answer it.
+    Only say "I don't know" if the information is genuinely absent.
 
     Context:
     {context}

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Grainient from "../components/Grainient";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
@@ -179,16 +180,13 @@ export default function ChatbotPage() {
     setIsTyping(true);
 
     try {
-      const res = await fetch(
-        "https://ai-research-assistant-g3t1.onrender.com",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ question: text }),
+      const res = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ question: text }),
+      });
 
       const data = await res.json();
 
@@ -248,13 +246,10 @@ export default function ChatbotPage() {
     formData.append("file", file);
 
     try {
-      const res = await fetch(
-        "https://ai-research-assistant-g3t1.onrender.com/upload",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const res = await fetch("http://127.0.0.1:8000/upload", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!res.ok) throw new Error("Upload failed");
 
@@ -531,7 +526,7 @@ export default function ChatbotPage() {
                           }),
                     }}
                   >
-                    {msg.content}
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                 </div>
               ))}
